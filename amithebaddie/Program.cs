@@ -8,7 +8,7 @@ using System.Security.Principal;
 using Microsoft.Win32;
 using System.Runtime.InteropServices;
 
-class Program3
+class Program
 {
     static void Main()
     {
