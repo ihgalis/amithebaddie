@@ -27,5 +27,5 @@ dotnet publish -c Release -r win-x64 --self-contained true
 
 ## Find the exe and run by moving the entire dir to Windows
 ```
-bin/Release/net5.0/win-x64/publish
+bin/Release/net<YOUR_DOT_NET_VERSION>/win-x64/publish
 ```
